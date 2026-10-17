@@ -1,0 +1,11 @@
+# Private capture/audio evidence and generated outputs
+*.pcap
+*.pcapng
+*.etl
+*.wav
+*.mp3
+*.log
+*.dll
+*.zip
+tools/
+*-decoded-samples.csv
