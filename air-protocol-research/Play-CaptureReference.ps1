@@ -112,7 +112,7 @@ public static class ReferenceWavePlayer {
     if (!$disable) { throw 'AIR disable control unavailable.' }
     $disable.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
     Start-Sleep -Seconds 1
-    & pktmon filter add AIRReferenceWave -i 172.16.5.90
+    & pktmon filter add AIRReferenceWave -i 192.0.2.20
     if ($LASTEXITCODE -ne 0) { throw 'Filter creation failed.' }
     $filterAdded = $true
     & pktmon start --capture --comp nics --pkt-size 0 --file-name ($CaptureStem + '.etl') --file-size 64

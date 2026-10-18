@@ -3,7 +3,7 @@ param([string]$Pcap = (Join-Path $PSScriptRoot 'air-dumpcap-ref.pcapng'),
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Decode-ReferenceBlocks.ps1') -DefinitionsOnly
 $ts = 'C:\Program Files\Wireshark\tshark.exe'
-$hexes = & $ts -r $Pcap -Y 'udp.payload[0:2]==44:6d && ip.dst==172.16.5.90' -T fields -e udp.payload
+$hexes = & $ts -r $Pcap -Y 'udp.payload[0:2]==44:6d && ip.dst==192.0.2.20' -T fields -e udp.payload
 $seen = @{}; $ok = 0; $bad = 0; $badReasons = @{}; $blocks = @()
 foreach ($h in $hexes) {
     $c = [Convert]::ToInt64($h.Substring(24, 16), 16)

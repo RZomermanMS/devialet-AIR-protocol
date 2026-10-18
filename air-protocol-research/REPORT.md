@@ -14,11 +14,11 @@ All work used retained local files. No live capture, playback, network transmiss
 
 Inputs reside in:
 
-`C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09`
+`C:\Evidence`
 
 Deliverables and this report reside in:
 
-`C:\Users\rzome\.copilot\session-state\39c990a0-2ab4-4967-b74a-4a62955476fa\files\air-protocol-analysis`
+`C:\Evidence`
 
 The original `air-session.pcapng` and `air-baseline.pcapng` label native WiFi frames as linktype 1. Both originals are explicitly rejected by integration tests. The retained corrected `air-session-wifi.pcapng` and `air-baseline-wifi.pcapng` use linktype 105 and are the working inputs. They are distinct retained files, not silent mutations of the originals.
 
@@ -193,12 +193,12 @@ All controlled 63/63 and baseline 136/136 Da CRCs pass. Validation of the status
 The following reproduce the offline workflow; do not treat these printed commands as a new execution in the documentation phase.
 
 ```powershell
-Set-Location 'C:\Users\rzome\.copilot\session-state\39c990a0-2ab4-4967-b74a-4a62955476fa\files\air-protocol-analysis'
+Set-Location 'C:\Evidence'
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Test-Audio.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Test-Feedback.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Test-Integration.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\Inspect-Air.ps1 -CapturePath 'C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09\air-session-wifi.pcapng' -OutputPath '.\controlled-inspection.json'
-powershell -NoProfile -ExecutionPolicy Bypass -File .\Inspect-Air.ps1 -CapturePath 'C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09\air-baseline-wifi.pcapng' -OutputPath '.\baseline-inspection.json'
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Inspect-Air.ps1 -CapturePath 'C:\Evidence\air-session-wifi.pcapng' -OutputPath '.\controlled-inspection.json'
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Inspect-Air.ps1 -CapturePath 'C:\Evidence\air-baseline-wifi.pcapng' -OutputPath '.\baseline-inspection.json'
 ```
 
 | Deliverable | Purpose |

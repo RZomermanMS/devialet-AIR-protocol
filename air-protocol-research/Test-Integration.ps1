@@ -1,4 +1,4 @@
-param([string]$InputRoot='C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09')
+param([string]$InputRoot='C:\Evidence')
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'Capture.ps1')
 . (Join-Path $PSScriptRoot 'Audio.ps1')

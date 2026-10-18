@@ -1,6 +1,79 @@
 # AIR start-up sequence (from `air-dumpcap-ref.pcapng`, one capture, one session pair)
 
-Observed, sender-side (PC 172.16.5.252 -> Expert 172.16.5.90).
+## Current sender: generated startup and automatic sessions (2026-10-18)
+
+The historical capture observations below remain useful, but Send-Mp3.ps1
+no longer requires the captured preamble by default. It constructs 38 valid
+200-frame stereo-silence Dm packets from scratch, with its own header,
+session, generation, counters and CRC. At 44100 Hz it uses mode 00; at
+48000 Hz mode 02. This is an empirically working startup sequence, not proof
+that 38 packets or a preamble are required.
+
+SessionId=0 now selects a random nonzero 16-bit session for each invocation;
+an explicit nonzero SessionId still permits reproducible experiments.
+Generation defaults to 30/32 within each fresh session. Successful repeated
+starts with that same generation but different sessions show that manual
+monotonically increasing generations are not needed in this tested workflow.
+Random selection does not guarantee collision freedom or define device
+session-expiry semantics.
+
+Before sending music, the sender requires a valid startup Df from the selected
+Expert address/port, matching session and generation, acknowledging the final
+startup counter with no intervals. It fails within two seconds if not ready.
+Audio feedback now also checks session, not just generation and CRC.
+Startup=Captured remains an explicit legacy diagnostic option; it is not an
+automatic fallback. Generated startup does not read a reference pcap.
+Discovery and diagnostic recording still depend on Wireshark tools.
+
+Live wired-laptop/Expert-Wi-Fi validation:
+
+- Initial generated-startup 44100 Hz excerpt: 1764 blocks acknowledged.
+- Two sequential six-second tracks at 44100 Hz: each 1323 blocks, final
+  B=264400; automatic sessions 0x2721 and 0x47c8, no resends.
+- Stop-file cancellation after five seconds prevented the playlist's second
+  track, exited visibly nonzero and released UDP 45456.
+- A fresh automatic session (0xd88a) then reconnected and acknowledged
+  another six-second excerpt.
+- A 48000 Hz six-second excerpt acknowledged 1440 blocks through B=287800.
+
+Normal completion waits for final B and then for F to pass the padded track
+end before closing; F is a transport/reference counter, not acoustic proof.
+Stop means cease sending and close the socket, not a demonstrated remote
+flush command: already queued audio may finish. Separate playlist sessions
+have discovery/decode/startup gaps; gapless transitions, pause/resume,
+automatic outage recovery and cold-device startup remain future work.
+Offline tests verify generated packets with the independent decoder, timeout
+before any music is sent, foreign-session rejection and cancellation cleanup.
+
+Incremental decoding follow-up: Send-Mp3.ps1 now pre-reads bounded PCM before
+startup instead of decoding the whole track. The final implementation uses
+a fixed 65536-byte decoder staging buffer and an 800-byte packet buffer
+(66336 application PCM bytes total); it consumes the first 200-frame block
+before startup. Further native reads occur as staging is consumed during
+pacing. Startup/readiness/session handling remains unchanged.
+Generated startup plus the earlier direct-800-byte delivery path completed a 185.5-second
+Track1 at 44100 Hz through natural EOF, including final partial-block padding
+and B/F drain. Short live 44100/48000 checks and stop/reconnect passed again.
+See [SENDER-TEST.md](./SENDER-TEST.md) for the bounded-buffer model, synchronous
+read limits and full-track decoded-PCM equivalence tests.
+
+The final staged implementation also completed Track1 at 48000 Hz with
+8903209 decoded frames and 44517 audio blocks, restoring nine tail frames
+lost by the earlier direct-small-read resampler pattern. The complete
+capture independently validates startup, packet CRC/decoding, 12 identical
+retransmissions, 191 zero-padding frames and final B/F drain.
+Stop/suppress-next-track/socket-release and fresh-session reconnect passed
+again with the final implementation at 44100 Hz.
+
+Generation-boundary experiment: startup 253 / audio 255 completed a full
+48000 Hz track using the earlier decoder (which omitted nine tail frames).
+A subsequent fresh-session startup at generation zero failed readiness:
+matching Df acknowledged only the first startup block (A=199, B=0, F=0).
+The cause is not established. This does not validate wraparound, nor prove
+that zero fails in every lifecycle state. Keep 30/32 as the tested default;
+fresh sessions do not by themselves establish every generation is valid.
+
+Observed, sender-side (PC 192.0.2.10 -> Expert 192.0.2.20).
 
 ## Phases
 | t (s) | What | Evidence |

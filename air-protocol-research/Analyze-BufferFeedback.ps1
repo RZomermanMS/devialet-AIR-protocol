@@ -1,8 +1,8 @@
 $ErrorActionPreference = 'Stop'
 $paths = @(
-    'C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09\air-session-packets.csv',
-    'C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09\air-reference-wifi-packets.csv',
-    'C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09\air-stereo-ramp-packets.csv')
+    'C:\Evidence\air-session-packets.csv',
+    'C:\Evidence\air-reference-wifi-packets.csv',
+    'C:\Evidence\air-stereo-ramp-packets.csv')
 $results = foreach ($path in $paths) {
     $rows = @(Import-Csv -LiteralPath $path | Sort-Object { [long]$_.TimestampRaw })
     $latest = $null

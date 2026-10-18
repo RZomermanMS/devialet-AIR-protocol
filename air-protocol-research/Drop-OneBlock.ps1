@@ -63,5 +63,5 @@ public static class OneBlockDropper {
  }
 }
 '@
-$filter = 'outbound and ip and udp and ip.DstAddr == 172.16.5.90 and udp.DstPort == 45455'
+$filter = 'outbound and ip and udp and ip.DstAddr == 192.0.2.20 and udp.DstPort == 45455'
 [OneBlockDropper]::Run($filter, $TargetCounter, $TimeoutSeconds, $PostDropSeconds, $LogPath)

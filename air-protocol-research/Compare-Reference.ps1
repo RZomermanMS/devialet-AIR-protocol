@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$csv = 'C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09\air-reference-wifi-packets.csv'
+$csv = 'C:\Evidence\air-reference-wifi-packets.csv'
 $rows = Import-Csv -LiteralPath $csv
 $packets = @($rows | Where-Object { $_.PayloadHex.StartsWith('446D') } | ForEach-Object {
     [pscustomobject]@{
@@ -63,7 +63,7 @@ $groups = @($unique | Group-Object Mode, Length | ForEach-Object {
         LastCounter = $_.Group[-1].Counter
     }
 })
-$previous = @(Import-Csv -LiteralPath 'C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09\air-session-packets.csv' |
+$previous = @(Import-Csv -LiteralPath 'C:\Evidence\air-session-packets.csv' |
     Where-Object { $_.PayloadHex.StartsWith('446D') })
 $lookup = @{}
 foreach ($row in $previous) { $lookup[$row.PayloadHex.Substring(24, 16)] = $row }

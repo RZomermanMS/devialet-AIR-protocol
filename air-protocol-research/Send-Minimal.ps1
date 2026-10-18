@@ -1,8 +1,16 @@
-param([int]$Gen = 6, [int]$Seconds = 8, [int]$Amp = 30, [string]$Stem = 'air-sender1', [int]$IdleMs = 1000)
+param([int]$Gen = 6, [int]$Seconds = 8, [int]$Amp = 30, [string]$Stem = 'air-sender1', [int]$IdleMs = 1000,
+    [int]$CaptureInterface=5, [string]$ExpertAddress, [string]$ExpertName,
+    [ValidateRange(-1,14)][int]$NetworkInputIndex=-1,
+    [ValidateSet(44100,48000)][int]$SampleRate=48000,
+    [switch]$ExperimentalRate,
+    [switch]$Observed44100Modes)
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
 $tshark = 'C:\Program Files\Wireshark\tshark.exe'
 $dumpcap = 'C:\Program Files\Wireshark\dumpcap.exe'
+. (Join-Path $PSScriptRoot 'Discovery.ps1')
+if($SampleRate -ne 48000 -and -not $ExperimentalRate) { throw 'Non-48k pacing requires -ExperimentalRate; header format is unverified.' }
+if($Observed44100Modes -and $SampleRate -ne 44100) { throw '-Observed44100Modes requires -SampleRate 44100.' }
 
 # preamble template: generation-06 blocks from the clean reference capture
 $rows = & $tshark -r air-dumpcap-ref.pcapng -Y 'udp.dstport==45455 && udp.payload[0:2]==44:6d' -T fields -e frame.time_relative -e udp.payload 2>$null
@@ -38,9 +46,12 @@ public static class Snd {
  static long BE64(byte[] d,int o){long v=0;for(int i=0;i<8;i++)v=(v<<8)|d[o+i];return v;}
  static byte[] FromHex(string h){var r=new byte[h.Length/2];for(int i=0;i<r.Length;i++)r[i]=Convert.ToByte(h.Substring(i*2,2),16);return r;}
 
- public static string Run(string[] preHex,double[] preT,int seconds,int amp,int idleMs,string localIp,string expert,int gen){
+ public static string Run(string[] preHex,double[] preT,int seconds,int amp,int idleMs,string localIp,string expert,int gen,int sampleRate,bool observed44100Modes){
   var log=new System.Text.StringBuilder();
-  var sock=new UdpClient(new IPEndPoint(IPAddress.Parse(localIp),45456));
+  var sock=new UdpClient(AddressFamily.InterNetwork);
+  sock.ExclusiveAddressUse=true;
+  try { sock.Client.Bind(new IPEndPoint(IPAddress.Parse(localIp),45456)); }
+  catch { sock.Close(); throw; }
   var dest=new IPEndPoint(IPAddress.Parse(expert),45455);
   var cache=new Dictionary<long,byte[]>(); var lk=new object();
   var sw=Stopwatch.StartNew(); int dfCount=0,resends=0,dfGap=0; bool stop=false;
@@ -58,15 +69,15 @@ public static class Snd {
   Thread.Sleep(idleMs);
   log.AppendLine("Df seen during idle: "+dfCount);
   // audio: generation 08, counter restarts at 0
-  var hdr=FromHex(preHex[0]); var h=new byte[22]; Array.Copy(hdr,h,22); h[10]=(byte)(gen+2); h[11]=0x02;
-  int blocks=(int)(seconds*48000/200); double period=200.0/48.0; long frame=0;
+  var hdr=FromHex(preHex[0]); var h=new byte[22]; Array.Copy(hdr,h,22); h[10]=(byte)(gen+2); h[11]=(byte)(observed44100Modes?0:2);
+  int blocks=(int)((long)seconds*sampleRate/200); double period=200000.0/sampleRate; long frame=0;
   double ta=sw.Elapsed.TotalMilliseconds;
   for(int k=0;k<blocks;k++){
    double due=ta+k*period; while(sw.Elapsed.TotalMilliseconds<due)Thread.SpinWait(50);
    var l=new int[200];var r=new int[200];
-   for(int i=0;i<200;i++){double s=Math.Sin(2*Math.PI*997.0*(frame+i)/48000.0); l[i]=(int)Math.Round(amp*s)*77; r[i]=l[i];}
+   for(int i=0;i<200;i++){double s=Math.Sin(2*Math.PI*997.0*(frame+i)/sampleRate); l[i]=(int)Math.Round(amp*s)*77; r[i]=l[i];}
    frame+=200;
-   long cnt=(long)k*200; var hh=(byte[])h.Clone(); if(k>=250)hh[11]=0x03;
+   long cnt=(long)k*200; var hh=(byte[])h.Clone(); if(k>=(observed44100Modes?227:250))hh[11]=(byte)(observed44100Modes?1:3);
    for(int i=0;i<8;i++)hh[12+i]=(byte)(cnt>>(56-8*i));
    var p=Packet(hh,l,r); lock(lk){cache[cnt]=p; cache.Remove(cnt-200*400);} sock.Send(p,p.Length,dest);
   }
@@ -77,15 +88,15 @@ public static class Snd {
 }
 '@
 
-$local = (Get-NetIPAddress -AddressFamily IPv4 | ? { $_.IPAddress -eq '172.16.5.252' }).IPAddress
-if (-not $local) { throw 'local IP 172.16.5.252 not found' }
-if (Get-NetUDPEndpoint -LocalPort 45456 -ErrorAction SilentlyContinue) { throw 'UDP 45456 is already in use' }
-
 $cap = Join-Path $PSScriptRoot "$Stem.pcapng"
-$dc = Start-Process -FilePath $dumpcap -ArgumentList @('-i','5','-s','0','-B','32','-f','"host 172.16.5.90"','-w',('"' + $cap + '"')) -PassThru -WindowStyle Hidden
+$dc = Start-Process -FilePath $dumpcap -ArgumentList @('-i',"$CaptureInterface",'-s','0','-B','32','-f','"udp port 45454 or udp port 45455 or udp port 45456"','-w',('"' + $cap + '"')) -PassThru -WindowStyle Hidden
 Start-Sleep -Seconds 2
 if ($dc.HasExited) { throw 'dumpcap failed to start.' }
-try { [Snd]::Run($preHex, $preT, $Seconds, $Amp, $IdleMs, $local, '172.16.5.90', $Gen) }
+try {
+    $target=Get-AirSenderTarget -CaptureInterface $CaptureInterface -ExpertAddress $ExpertAddress -ExpertName $ExpertName -NetworkInputIndex $NetworkInputIndex
+    "Selected Expert: $($target.Device.Name) at $($target.ExpertAddress)"
+    "Tone/pacing rate: $SampleRate Hz; observed 44.1k audio header modes: $Observed44100Modes; preamble remains the 48k reference."
+    [Snd]::Run($preHex, $preT, $Seconds, $Amp, $IdleMs, $target.LocalAddress, $target.ExpertAddress, $Gen, $SampleRate, [bool]$Observed44100Modes)
+}
 finally { Start-Sleep -Seconds 1; Stop-Process -Id $dc.Id -ErrorAction SilentlyContinue }
 "capture: $cap"
-

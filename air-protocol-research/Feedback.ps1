@@ -1,4 +1,4 @@
-﻿Set-StrictMode -Version 2
+Set-StrictMode -Version 2
 . (Join-Path $PSScriptRoot 'Common.ps1')
 function Get-AirHexString([byte[]]$Bytes,[int]$Offset,[int]$Count) { Assert-AirRange $Bytes $Offset $Count; (($Bytes[$Offset..($Offset+$Count-1)] | ForEach-Object { $_.ToString('X2') }) -join '') }
 function ConvertFrom-AirDf([byte[]]$Bytes) {
@@ -28,20 +28,21 @@ function ConvertFrom-AirDf([byte[]]$Bytes) {
 }
 function ConvertFrom-AirDa([byte[]]$Bytes) {
     if ($null -eq $Bytes) { throw 'Da: null payload' }
-    if ($Bytes.Length -ne 345) { throw 'Da: length must be 345' }
+    if ($Bytes.Length -notin @(345,512)) { throw 'Da: length must be 345 or 512' }
     if ($Bytes[0] -ne 0x44 -or $Bytes[1] -ne 0x61) { throw 'Da: bad magic' }
-    $crcStored = [UInt16](Get-AirUIntBE $Bytes 343 2); $crcCalc = Get-AirCrc16 $Bytes 343
+    $crcOffset = $Bytes.Length - 2
+    $crcStored = [UInt16](Get-AirUIntBE $Bytes $crcOffset 2); $crcCalc = Get-AirCrc16 $Bytes $crcOffset
     if ($crcStored -ne $crcCalc) { throw ('Da: CRC mismatch stored {0:X4} computed {1:X4}' -f $crcStored,$crcCalc) }
     $ascii = [Text.Encoding]::ASCII
     $name = $ascii.GetString($Bytes,19,32).TrimEnd([char]0,' ')
     $inputs = @()
     for ($i=0; $i -lt 15; $i++) {
         $o = 52 + 17*$i
-        $inputs += [pscustomobject]@{ Index=$i; Flag=$Bytes[$o]; Label=$ascii.GetString($Bytes,$o+1,16).TrimEnd([char]0,' ') }
+        $inputs += [pscustomobject]@{ Index=$i; Flag=$Bytes[$o]; Enabled=($Bytes[$o] -eq 0x31); Label=$ascii.GetString($Bytes,$o+1,16).TrimEnd([char]0,' ') }
     }
     $b310 = [int]$Bytes[310]
     [pscustomobject]@{
-        Length=345; Name=$name; Inputs=$inputs; PowerOn=(($Bytes[307] -band 0x80) -ne 0); Muted=(($Bytes[308] -band 2) -ne 0)
+        Length=$Bytes.Length; Name=$name; Inputs=$inputs; PowerOn=(($Bytes[307] -band 0x80) -ne 0); Muted=(($Bytes[308] -band 2) -ne 0)
         Channel=(($Bytes[308] -band 0x3C) -shr 2); VolumeRaw=$b310; Volume=(($b310 - 195) / 2.0); Crc=('{0:X4}' -f $crcStored); CrcValid=$true
     }
 }
@@ -115,4 +116,3 @@ function Get-AirFeedbackAnalysis($Packets) {
     $res.Dfs = $dfRows; $res.DmSorted = $dmU
     [pscustomobject]$res
 }
-

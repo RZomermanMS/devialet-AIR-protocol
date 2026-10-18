@@ -67,7 +67,7 @@ public static class ModeDropper {
  }
 }
 '@
-$filter = '(outbound and ip and udp and ip.DstAddr == 172.16.5.90 and udp.DstPort == 45455) or (inbound and ip and udp and ip.SrcAddr == 172.16.5.90 and udp.DstPort == 45456)'
+$filter = '(outbound and ip and udp and ip.DstAddr == 192.0.2.20 and udp.DstPort == 45455) or (inbound and ip and udp and ip.SrcAddr == 192.0.2.20 and udp.DstPort == 45456)'
 [ModeDropper]::Run($filter, $Target, ($Mode -eq "df"), $TimeoutSeconds, $PostDropSeconds, $LogPath)
 
 

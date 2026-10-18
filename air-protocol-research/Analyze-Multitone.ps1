@@ -1,7 +1,7 @@
 param([string]$Pcap = (Join-Path $PSScriptRoot 'air-multitone.pcapng'))
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'Decode-ReferenceBlocks.ps1') -DefinitionsOnly
-$rows = & 'C:\Program Files\Wireshark\tshark.exe' -r $Pcap -Y 'udp.payload[0:2]==44:6d && ip.dst==172.16.5.90' -T fields -e udp.payload
+$rows = & 'C:\Program Files\Wireshark\tshark.exe' -r $Pcap -Y 'udp.payload[0:2]==44:6d && ip.dst==192.0.2.20' -T fields -e udp.payload
 $segs = New-Object System.Collections.ArrayList; $cur = $null; $prev = -1
 foreach ($h in $rows) { $c = [Convert]::ToInt64($h.Substring(24, 16), 16)
     if ($prev -ge 1000 -and $c -le 400) { $cur = $null }

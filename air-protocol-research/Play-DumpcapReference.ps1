@@ -111,7 +111,7 @@ public static class ReferenceWavePlayer {
         $null = Get-Process -Name DevialetAIR
     }
     $pcap = Join-Path $PSScriptRoot ($CaptureStem + '.pcapng')
-    $capProc = Start-Process -FilePath $dumpcap -ArgumentList @('-i','5','-s','0','-B','32','-f','"host 172.16.5.90"','-w',('"' + $pcap + '"')) -PassThru -WindowStyle Hidden
+    $capProc = Start-Process -FilePath $dumpcap -ArgumentList @('-i','5','-s','0','-B','32','-f','"host 192.0.2.20"','-w',('"' + $pcap + '"')) -PassThru -WindowStyle Hidden
     Start-Sleep -Seconds 2
     if ($capProc.HasExited) { throw 'dumpcap failed to start.' }
     $capturing = $true

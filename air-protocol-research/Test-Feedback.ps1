@@ -1,4 +1,5 @@
-﻿param([string]$CsvPath='C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09\air-session-packets.csv',[string]$OutputPath=(Join-Path $PSScriptRoot 'feedback-results.json'))
+param([string]$CsvPath='C:\Evidence\air-session-packets.csv',[string]$OutputPath=(Join-Path $PSScriptRoot 'feedback-results.json'),[switch]$SyntheticOnly)
+if($SyntheticOnly -and $PSBoundParameters.ContainsKey('CsvPath')) { throw 'SyntheticOnly cannot be combined with CsvPath.' }
 Set-StrictMode -Version 2
 . (Join-Path $PSScriptRoot 'Feedback.ps1')
 $script:tests=@()
@@ -41,7 +42,9 @@ T 'Analysis rejects bad packets and does not throw' { $p=@([pscustomobject]@{Tim
 T 'Analysis rejects odd hex' { $r=Get-AirFeedbackAnalysis @([pscustomobject]@{TimestampRaw=1;PayloadHex='446';PayloadLength=2}); $r.OtherPackets -eq 1 -or $r.Rejected -eq 1 }
 
 $real=$null
-if(Test-Path -LiteralPath $CsvPath){
+if($SyntheticOnly) {
+    'Synthetic-only mode: retained-capture assertions are not run.'
+} elseif(Test-Path -LiteralPath $CsvPath){
     $pk=Import-Csv -LiteralPath $CsvPath; $real=Get-AirFeedbackAnalysis $pk
     $before=(Get-FileHash -LiteralPath $CsvPath).Hash
     T 'Real: Df 162/162 valid CRC/count, none rejected' { $real.DfValid -eq 162 -and $real.Rejected -eq 0 }
@@ -54,10 +57,9 @@ if(Test-Path -LiteralPath $CsvPath){
     T 'Real: input CSV unchanged' { (Get-FileHash -LiteralPath $CsvPath).Hash -eq $before }
 } else { T 'Real CSV present' { $false } }
 
-$summary=[ordered]@{ GeneratedUtc=(Get-Date).ToUniversalTime().ToString('o'); Input=$CsvPath; Total=$tests.Count; Passed=@($tests|?{$_.Passed}).Count; Failed=@($tests|?{-not $_.Passed}).Count; Tests=$tests }
+$summary=[ordered]@{ GeneratedUtc=(Get-Date).ToUniversalTime().ToString('o'); Input=$(if($SyntheticOnly){$null}else{$CsvPath}); SyntheticOnly=[bool]$SyntheticOnly; Total=$tests.Count; Passed=@($tests|?{$_.Passed}).Count; Failed=@($tests|?{-not $_.Passed}).Count; Tests=$tests }
 if($real){ $summary.Analysis = $real | Select-Object * -ExcludeProperty Dfs,DmSorted,RejectedDetail
   $summary.Analysis | Add-Member -NotePropertyName DfLengthHistogram -NotePropertyValue @($real.Dfs|Group-Object {$_.D.Length}|Sort-Object {[int]$_.Name}|%{[pscustomobject]@{Length=[int]$_.Name;Count=$_.Count}}) -Force }
 $summary | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $OutputPath -Encoding UTF8
 "Tests: $($summary.Passed)/$($summary.Total) passed"; $tests|?{-not $_.Passed}|%{ "FAIL $($_.Name): $($_.Error)" }
 if($summary.Failed){ exit 1 }
-

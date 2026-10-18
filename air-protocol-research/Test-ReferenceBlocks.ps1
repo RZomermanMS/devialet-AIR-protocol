@@ -117,7 +117,7 @@ Check 'Independent widths and ordered blocks in synthetic asymmetric stereo' {
     }
 }
 Check 'Stereo ramp capture decodes every packet including unequal widths' {
-    $ramp = @(Import-Csv -LiteralPath 'C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09\air-stereo-ramp-packets.csv' |
+    $ramp = @(Import-Csv -LiteralPath 'C:\Evidence\air-stereo-ramp-packets.csv' |
         Where-Object { $_.PayloadHex.StartsWith('446D') })
     if ($ramp.Count -ne 372) { throw 'Unexpected stereo ramp count.' }
     $unequal = 0
@@ -143,7 +143,7 @@ Check 'Nonperiodic alignment validated on both channels and separate windows' {
     }
     if ($result.VolumeBytes.Count -ne 1) { throw 'Amplifier volume changed within ramp capture.' }
 }
-$rows = Import-Csv -LiteralPath 'C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09\air-reference-wifi-packets.csv'
+$rows = Import-Csv -LiteralPath 'C:\Evidence\air-reference-wifi-packets.csv'
 Check 'All 561 captured Dm packets decode and have matching channels' {
     $audio = @($rows | Where-Object { $_.PayloadHex.StartsWith('446D') })
     if ($audio.Count -ne 561) { throw 'Unexpected capture size.' }
@@ -156,7 +156,7 @@ Check 'All 561 captured Dm packets decode and have matching channels' {
 }
 $measured = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'reference-decoded-results.json') -Raw | ConvertFrom-Json
 Check 'Earlier capture independently accepts widths 0, 9, 10 and 11 across 951 packets' {
-    $earlier = @(Import-Csv -LiteralPath 'C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09\air-session-packets.csv' |
+    $earlier = @(Import-Csv -LiteralPath 'C:\Evidence\air-session-packets.csv' |
         Where-Object { $_.PayloadHex.StartsWith('446D') })
     if ($earlier.Count -ne 951) { throw 'Earlier capture size changed.' }
     $widths = @($earlier | ForEach-Object { ([ReferenceBlockDecoder]::Decode($_.PayloadHex)).Width } |

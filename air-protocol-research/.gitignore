@@ -1,11 +1,31 @@
-# Private capture/audio evidence and generated outputs
+# Local evidence, audio and generated results
 *.pcap
 *.pcapng
 *.etl
 *.wav
 *.mp3
+*.flac
+*.pcm
+*.raw
 *.log
-*.dll
-*.zip
+*.stop
+*.signal
+*.json
+*.csv
+!SHA256SUMS.csv
+
+# Downloaded dependencies, archives and local environment
 tools/
-*-decoded-samples.csv
+*.dll
+*.exe
+*.sys
+*.nupkg
+*.zip
+*.7z
+.env
+.env.*
+*.key
+*.pem
+*.pfx
+*.p12
+*.user

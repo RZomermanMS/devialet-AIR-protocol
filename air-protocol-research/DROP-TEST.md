@@ -1,11 +1,25 @@
 # Controlled single-block drop test
 
+## Later interval mapping (2026-10-18)
+
+The historical unresolved interval interpretation below is superseded for
+the tested captures by `counter = F - (F % 200) + 200 * intervalIndex`.
+F is the big-endian field at offset 26. Across six official loss captures,
+the first predicted counter equals B+200 in all 22 interval reports; 21
+have a matching outbound packet within 250 ms. The known adjacent-pair
+example maps F=230841 and [246,247] to counters 280000 and 280200.
+See FORMATS.md and Test-SenderWatchdog.ps1 for fixtures and safety limits.
+This supports a relative 200-frame-block interpretation, not a complete
+specification for counter wrap/reset, other block sizes or receiver playout.
+Live exact-recovery tests recovered some requests before F reached their
+counters, but sustained Qmusic runs still stalled; see LONG-RUN.md.
+
 Date: 2026-10-17. Approved by the user. Volume untouched. Reference tone `air-test-48k16-stereo-997hz.wav`.
 
 ## Method
 
-* Sender-side capture: Wireshark `dumpcap` (Npcap) on the Wi-Fi adapter, filter `host 172.16.5.90`, file `air-dumpcap-drop.pcapng`. Npcap captures below the WFP layer, so a packet dropped by WinDivert does not appear in the capture.
-* Drop: `Drop-OneBlock.ps1` (WinDivert 2.2.2, elevated) discarded only the **first outbound `Dm` with counter 240000** (flow 172.16.5.252:45456 -> 172.16.5.90:45455) and forwarded everything else unchanged. Log: `drop-test.log` (seen 2436, forwarded 2435, dropped 1).
+* Sender-side capture: Wireshark `dumpcap` (Npcap) on the Wi-Fi adapter, filter `host 192.0.2.20`, file `air-dumpcap-drop.pcapng`. Npcap captures below the WFP layer, so a packet dropped by WinDivert does not appear in the capture.
+* Drop: `Drop-OneBlock.ps1` (WinDivert 2.2.2, elevated) discarded only the **first outbound `Dm` with counter 240000** (flow 192.0.2.10:45456 -> 192.0.2.20:45455) and forwarded everything else unchanged. Log: `drop-test.log` (seen 2436, forwarded 2435, dropped 1).
 * The WinDivert driver service was removed afterwards.
 
 ## Observed sequence (capture times in seconds)

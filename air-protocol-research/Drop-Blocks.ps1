@@ -1,4 +1,4 @@
-﻿param(
+param(
     [uint64[]]$Targets = @(120000,200000,280000,280200,320000,320800,360000,420000),
     [int]$TimeoutSeconds = 90,
     [int]$PostDropSeconds = 25,
@@ -63,6 +63,6 @@ public static class MultiBlockDropper {
  }
 }
 '@
-$filter = 'outbound and ip and udp and ip.DstAddr == 172.16.5.90 and udp.DstPort == 45455'
+$filter = 'outbound and ip and udp and ip.DstAddr == 192.0.2.20 and udp.DstPort == 45455'
 [MultiBlockDropper]::Run($filter, $Targets, $TimeoutSeconds, $PostDropSeconds, $LogPath)
 

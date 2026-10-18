@@ -89,7 +89,7 @@ public static class StereoRampComparison {
  }
 }
 '@
-$rows = Import-Csv -LiteralPath 'C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09\air-stereo-ramp-packets.csv'
+$rows = Import-Csv -LiteralPath 'C:\Evidence\air-stereo-ramp-packets.csv'
 $audio = @($rows | Where-Object { $_.PayloadHex.StartsWith('446D') })
 $decoded = @($audio | ForEach-Object { [ReferenceBlockDecoder]::Decode($_.PayloadHex) })
 $left = [int[][]]@($decoded | ForEach-Object { ,$_.Left })

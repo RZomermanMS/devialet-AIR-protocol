@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$WaveName = 'air-test-48k16-stereo-997hz.wav',
     [string]$ExpectedSHA256 = 'EFCED6291888A928155BD2F5C6DBE7114C45B0D7861CC3D452CA769E9E727B05',
     [ValidatePattern('^[a-zA-Z0-9-]+$')][string]$CaptureStem = 'air-reference'
@@ -83,7 +83,7 @@ public static class ReferenceWavePlayer {
         if ($icon) { $icon.Current.Name } else { 'unknown' }
     }
     $pcap = Join-Path $PSScriptRoot ($CaptureStem + '.pcapng')
-    $capProc = Start-Process -FilePath $dumpcap -ArgumentList @('-i','5','-s','0','-B','32','-f','"host 172.16.5.90"','-w',('"' + $pcap + '"')) -PassThru -WindowStyle Hidden
+    $capProc = Start-Process -FilePath $dumpcap -ArgumentList @('-i','5','-s','0','-B','32','-f','"host 192.0.2.20"','-w',('"' + $pcap + '"')) -PassThru -WindowStyle Hidden
     Start-Sleep -Seconds 2
     if ($capProc.HasExited) { throw 'dumpcap failed to start.' }
     $capturing = $true

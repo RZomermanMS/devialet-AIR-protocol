@@ -43,7 +43,7 @@ Assert-AudioEqual $syntheticResult.CounterGridStep 200 'Counter grid step'
 Assert-AudioEqual $syntheticResult.MissingGridPositionsWithinRange 0 'Missing grid count'
 $testCount += 6
 
-$inputRoot = 'C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09'
+$inputRoot = 'C:\Evidence'
 $sessionPackets = @(Import-Csv -LiteralPath (Join-Path $inputRoot 'air-session-packets.csv'))
 $actual = Get-AirAudioAnalysis $sessionPackets
 Assert-AudioEqual $actual.ParsedDmPacketCount 951 'Controlled Dm packet count'

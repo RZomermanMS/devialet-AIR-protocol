@@ -67,7 +67,7 @@ public static class AirBlockProbe {
  }
 }
 '@
-$rows = Import-Csv -LiteralPath 'C:\Users\rzome\.copilot\chats\039f3399-aee8-46c9-a98f-2021da23cf09\air-reference-wifi-packets.csv'
+$rows = Import-Csv -LiteralPath 'C:\Evidence\air-reference-wifi-packets.csv'
 $tone = $rows | Where-Object { $_.PayloadHex.StartsWith('446D') -and $_.PayloadLength -eq '614' } | Select-Object -First 1
 [AirBlockProbe]::Probe($tone.PayloadHex) | Sort-Object Score | Select-Object -First 12 | Format-Table -AutoSize
 $steady = $rows | Where-Object { $_.PayloadHex.StartsWith('446D') -and $_.PayloadLength -eq '614' -and

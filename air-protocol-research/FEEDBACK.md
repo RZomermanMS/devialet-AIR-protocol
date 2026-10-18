@@ -1,6 +1,27 @@
-﻿# F1 Feedback (Df/Da) decoder
+# F1 Feedback (Df/Da) decoder
 
 Files: `Feedback.ps1` (dot-source; needs Common.ps1), `Test-Feedback.ps1` (30 tests, exit 1 on failure, writes `feedback-results.json`).
+
+## Subsequent sender findings (2026-10-18)
+
+The historical correlations below predate the controlled-loss work. For the
+tested 200-frame streams, B is the last contiguous block start, A is the
+highest observed frame endpoint, and F at offset 26 is an advancing
+receiver/reference frame counter. An interval index maps to:
+
+`counter = F - (F % 200) + 200 * index`
+
+See [DROP-TEST.md](./DROP-TEST.md) for official-sender capture evidence and
+[SENDER-TEST.md](./SENDER-TEST.md) for sender/mock/live validation. The old
+first-index=B/200+1 correlation applies when F is zero; it is not a general
+absolute block-index formula. F is not acoustic confirmation or a calibrated
+DAC clock. Session bytes are Dm[5..6] and Df[4..5], as noted below.
+The sender now validates session as well as generation, source, length and CRC.
+
+Da decoding also accepts the upstream 512-byte layout with trailing CRC, in
+addition to the observed local 345-byte status; see DISCOVERY.md. No inference
+of arbitrary format negotiation, other block sizes or generation-wrap rules
+is made by these follow-up findings.
 
 ## Interface (no side effects)
 - `ConvertFrom-AirDf([byte[]])` - throws on null, len<41, bad magic 4466, (len-41)%4!=0, BE16 count@37 != n, CRC mismatch. Returns Length, Session4_5, Session5_6, Field10_U64BE, Field18_U64BE, Count, Intervals(Start/End), IntervalsOrdered (flagged, not rejected), Crc, CrcValid.

@@ -1,6 +1,6 @@
 # Full-stream decode of the dumpcap capture
 
-Capture `air-dumpcap-ref.pcapng` (Wireshark/Npcap, host filter 172.16.5.90, reference tone, volume untouched).
+Capture `air-dumpcap-ref.pcapng` (Wireshark/Npcap, host filter 192.0.2.20, reference tone, volume untouched).
 Scripts: `Compare-FullStream.ps1`, `Find-Offset.ps1`, `Fit-FullStream.ps1`.
 
 ## Results
